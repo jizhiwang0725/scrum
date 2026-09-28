@@ -1,9 +1,10 @@
 ---
-name: 🔬 技术探路 (Spike)
+name: "\U0001F52C 技术探路 (Spike)"
 about: 有时间限制的技术调研、选型对比或概念验证 (PoC)
 title: 'spike: '
-labels: spike, research
+labels: ''
 assignees: ''
+
 ---
 
 ### ❓ 核心疑问 (Context & Problem)
