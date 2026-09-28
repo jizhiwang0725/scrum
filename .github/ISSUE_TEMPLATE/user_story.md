@@ -1,7 +1,7 @@
 ---
 name: "\U0001F31F 用户故事 (User Story)"
 about: 提交一个新的产品功能或业务需求
-title: 'feat: '
+title: 'story: '
 labels: enhancement
 assignees: ''
 
