@@ -1,10 +1,9 @@
 ---
-name: "\U0001F31F 用户故事 (User Story)"
+name: 🌟 用户故事 (User Story)
 about: 提交一个新的产品功能或业务需求
-title: 'story: '
+title: 'feat: '
 labels: enhancement
 assignees: ''
-
 ---
 
 ### 📖 价值描述 (Description)

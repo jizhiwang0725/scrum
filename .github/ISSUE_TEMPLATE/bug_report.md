@@ -1,10 +1,9 @@
 ---
-name: "\U0001F41B 缺陷报告 (Bug Report)"
+name: 🐛 缺陷报告 (Bug Report)
 about: 报告主分支代码或产品中的错误行为
 title: 'fix: '
-labels: bug, enhancement
+labels: bug
 assignees: ''
-
 ---
 
 ### 🐞 Bug 描述 (Description)

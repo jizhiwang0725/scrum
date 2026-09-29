@@ -1,10 +1,9 @@
 ---
-name: "⚙️ 技术任务 (Technical Task)"
+name: ⚙️ 技术任务 (Technical Task)
 about: 基础设施搭建、环境配置、Git演练或代码重构
 title: 'chore: '
-labels: ''
+labels: task
 assignees: ''
-
 ---
 
 ### 🎯 任务目标 (Objective)
