@@ -1,0 +1,227 @@
+/* =========================================
+   Base Elements
+   ========================================= */
+body {
+  /* Background */
+  background-color: #2A252A;
+  color: #e0e0e0;
+  padding: 20px;
+
+  /* Font */
+  font-family: Tahoma, sans-serif;
+  font-size: 1.2rem;
+  
+}
+
+p {
+  margin-bottom: 0rem; 
+}
+
+strong {
+  /* Text */
+  color: #E9C46A;
+}
+
+ul {
+  padding-left: 20px;
+  padding-top: 0px;
+}
+li > ul {
+  padding-left: 15px;
+}
+
+blockquote {
+  padding-left: 5px;
+  margin-right: 5px;
+  border-radius: 5px;
+}
+
+a {
+  color: #e0e0e0 !important;
+}
+
+/* =========================================
+   Headings
+   ========================================= */
+h1 {
+  /* Background */
+  background-color: #1e1e1e; 
+  padding: 20px;
+  border-radius: 20px;
+  border: 3px dotted #555555 !important; 
+
+  /* Text */
+  text-decoration: none;
+  text-align: center;
+}
+
+h2 {
+  /* Background */
+  padding: 10px; 
+
+  /* Border */
+  border-bottom: 3px solid #E9C46A !important;
+  border-top: 3px solid #E9C46A !important;
+}
+
+h3 {
+  /* Text */
+  font-size: 1.5rem;
+
+  /* Background */
+  padding: 5px 5px 5px 10px; /* Top, Right, Bottom, Left */
+
+  /* Border */
+  border-top: 2px dashed #555555;
+  border-bottom: 2px dashed #555555;
+}
+
+/* =========================================
+   Layout & Containers
+   ========================================= */
+
+/* The Table of Contents (Left Side) */
+.toc-sidebar {
+  font-size: 1.3rem;;
+
+  position: fixed; 
+  top: 20px;
+  left: 20px;
+  width: 30%; 
+  
+  /* Use calc() to keep the bottom border on screen */
+  height: calc(100vh - 40px); 
+  overflow-y: auto;
+  
+  padding: 20px 10px 20px 20px;
+  background-color: #1e1e1e;
+  border-radius: 20px;
+  border: 3px dotted #555555 !important;
+
+  /* Crucial: Prevents padding/borders from adding to the 30% width */
+  box-sizing: border-box; 
+}
+
+.toc-sidebar a:hover {
+  color: #E9C46A !important;
+  text-decoration: underline; /* Optional: adds an underline on hover */
+}
+
+/* Sub-heading settings */
+.toc-sidebar > ul > li > ul {
+  padding-left: 0px !important;
+}
+
+/* Remove default bullets and set base alignment for ALL secondary/tertiary headings */
+.toc-sidebar > ul > li ul li {
+    list-style-type: none; 
+    position: relative;
+    padding-left: 20px; /* Creates permanent left gap for symbols so text wraps cleanly */
+}
+
+/* Hide sub-sub-headings by default with smooth transition */
+.toc-sidebar > ul > li > ul > li > ul {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    padding-left: 0px !important;
+    margin-top: 0;
+    margin-bottom: 0;
+    
+    /* Disappear transition */
+    transition: max-height 0.3s ease-out, opacity 0.3s ease-out, margin-top 0.3s ease-out;
+}
+
+/* Reveal the sub-sub-headings when the .is-open class is active */
+.toc-sidebar > ul > li > ul > li.is-open > ul {
+    max-height: 500px; /* Adjust if your lists are taller than this */
+    opacity: 1;
+    /* Appear transition */
+    transition: max-height 0.3s ease-in, opacity 0.3s ease-in, margin-top 0.3s ease-in;
+}
+
+/* Fixed-width container for BOTH symbols (Pinned to the left using absolute positioning) */
+.toc-sidebar > ul > li > ul > li::before {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: inline-block;
+    width: 20px;         /* Forces both symbols to take up exactly the same space */
+    text-align: center;  /* Centers the symbol inside that 20px space */
+    color: #888888 !important;
+}
+
+/* Insert the arrow for items WITH hidden sub-sub-headings */
+.toc-sidebar > ul > li > ul > li:has(> ul)::before {
+    content: "›";        
+    transition: transform 0.5s ease;
+    transform-origin: center center;
+}
+
+/* Insert the hollow dot for items WITHOUT sub-sub-headings */
+.toc-sidebar > ul > li > ul > li:not(:has(> ul))::before {
+    content: "○";        
+}
+
+/* Rotate the arrow when the .is-open class is active */
+.toc-sidebar > ul > li > ul > li:has(> ul).is-open::before {
+    transform: rotate(90deg);
+}
+
+/* Insert a square dot for sub-sub-headings (tertiary level) */
+.toc-sidebar > ul > li > ul > li > ul > li::before {
+    content: "▪";   
+    color:#888888; 
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: inline-block;
+    width: 20px;
+    text-align: center;
+}
+
+/* The Main Content (Right Side) */
+.main-content {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  left: calc(30% + 40px);
+  
+  /* Use calc() to keep the container perfectly sized on screen */
+  height: calc(100vh - 40px); 
+  overflow-y: auto;
+  padding-bottom: 20px;
+
+  
+  /* Crucial: Prevents padding from pushing the width beyond 65% */
+  box-sizing: border-box; 
+}
+
+/* =========================================
+   Tables
+   ========================================= */
+table {
+  /* Background */
+  display: block; 
+  width: max-content; 
+  max-width: 100%; 
+  padding: 5px;
+  
+  /* Scroll */
+  overflow-x: auto; 
+  white-space: nowrap; 
+}
+
+/* =========================================
+   Responsive Design (Media Queries)
+   ========================================= */
+@media screen and (max-width: 800px) {
+  .toc-sidebar {
+    display: none !important; /* Hides TOC on smaller windows */
+  }
+  
+  .main-content {
+    left: 20px !important; /* Allows text to expand and prevents overlap */
+    width: auto;    
+  }
+}
