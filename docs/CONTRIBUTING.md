@@ -21,12 +21,15 @@ setTimeout(() => {
 
 <strong>Table of Contents</strong>
 
+- [Language Policy](#language-policy)
 - [Team Workflow Rule](#team-workflow-rule)
   - [Main Branch Protection](#main-branch-protection)
   - [Branch Naming Convention](#branch-naming-convention)
     - [Structure](#structure)
 - [Pull Request Standards](#pull-request-standards)
   - [Naming Convention](#naming-convention)
+- [Issues](#issues)
+  - [Categories](#categories)
   - [Templates](#templates)
 - [Committing Message](#committing-message)
   - [One-line](#one-line)
@@ -47,6 +50,9 @@ setTimeout(() => {
 
 <div class= "main-content">
 
+# Language Policy 
+- **Project Management** (Issues/Kanban) is conducted in **Chinese** :cn:. 
+- **Version Control** (Commits/Branches) must be in **English** :gb:.
 
 # Team Workflow Rule 
 ## Main Branch Protection
@@ -65,6 +71,17 @@ setTimeout(() => {
 ## Naming Convention 
 - Follow the same format used in one-line commits 
   `<type>(<scope>): <subject>`
+
+# Issues 
+## Categories
+| Name | Function |
+| --- | --- |
+| 🌟 用户故事 (User Story) | 提交一个新的产品功能或业务需求 |
+| 🔬 技术探路 (Spike) | 有时间限制的技术调研、选型对比或概念验证 (PoC) | 
+| 💻 开发子任务 (Dev Task) | 为实现某个 User Story 而拆解的具体功能代码开发 |
+| ⚙️ 技术任务 (Technical Task) | 基础设施搭建、环境配置、Git演练或代码重构 |
+| 🐛 缺陷报告 (Bug Report) | 报告主分支代码或产品中的错误行为 |
+
 
 ## Templates 
 - Require developers to fill out the **checklist in the PR description**, expanding on the "why this change was made" concept you currently suggest for complex commits.
@@ -143,6 +160,8 @@ setTimeout(() => {
     # 3. Delete your local feature branch
     git branch -d <your-branch-name>
     ```
+
+
 </div>
 
 
