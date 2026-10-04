@@ -8,15 +8,14 @@ This is the single source of truth for our product backlog, Sprint planning, and
 **Project Management** (Issues/Kanban) is conducted in **Chinese** :cn:.  
 **Version Control** (Commits/Branches) must be in **English** :gb:.
 
-# Team Workflow Rule 
-## :warning: Main Branch Protection
+# :warning: Team Workflow Rule 
+***Main Branch Protection***  
 Direct pushes to the `main` branch are strictly prohibited. All code changes must be made on separate feature branches and merged into the main branch via a Pull Request (PR) after a Code Review.
   
-## Branch Naming Convention
+***Branch Naming Convention***  
 `<type>/<short-description>`
   - `feat/user-login`
-  - `fix/nav-bar-bug`
-  - `docs/update-readme`
+
 
 # Pull Request Standards
 ***Naming Convention***  
@@ -103,7 +102,7 @@ git fetch --prune
 git branch -d <your-branch-name>
 ```
 
-# Project Views
+# 📋 Project Views
 To maintain a clear and focused workflow, this board uses filters and custom fields to divide the workspace into the following dedicated views:
 
 - **_Current Sprint_**  
@@ -143,7 +142,7 @@ A Pull Request has been submitted and is waiting for review by other team member
 5. **_Done_**  
 Tasks that have had their PRs successfully merged and meet the team's "Definition of Done" (DoD).
 
-# Board Usage Guide
+# 💡 Board Usage Guide
 **_For Developers_**  
 Focus closely on the Current Sprint view. Proactively claim tasks from the Todo column by setting yourself as the Assignee, and drag the card to In Progress when you begin coding.
 
@@ -152,95 +151,6 @@ The Scrum Master will pull high-priority stories from the Product Backlog, assig
 
 **_Daily Updates_**  
 Please ensure you update the status and progress of your assigned task cards before the start of the Daily Stand-up every day.
-
-
-
-<style>
-/* =========================================
-   Base Elements
-   ========================================= */
-body {
-  /* Background */
-  color: #e0e0e0;
-  padding: 20px;
-
-  /* Font */
-  font-family: Tahoma, sans-serif;
-  font-size: 1.2rem;
-  
-}
-
-p {
-  margin-bottom: 0rem; 
-}
-
-strong {
-  /* Text */
-  color: #E9C46A;
-}
-
-ul {
-  padding-left: 20px;
-  padding-top: 0px;
-}
-li > ul {
-  padding-left: 15px;
-}
-
-blockquote {
-  padding-left: 5px;
-  margin-right: 5px;
-  border-radius: 5px;
-}
-
-a {
-  color: #e0e0e0 !important;
-}
-
-/* =========================================
-   Headings
-   ========================================= */
-
-h1 {
-  margin-top: 1.5em;
-}
-
-h2 {
-  /* Background */
-  margin-top: 0.5em;
-
-  /* Border */
-  border-bottom: 3px solid #E9C46A !important;
-}
-
-h3 {
-  /* Text */
-  font-size: 1.5rem;
-
-  /* Background */
-  padding: 5px 5px 5px 10px; /* Top, Right, Bottom, Left */
-
-  /* Border */
-  border-top: 2px dashed #555555;
-  border-bottom: 2px dashed #555555;
-}
-
-/* =========================================
-   Tables
-   ========================================= */
-table {
-  /* Background */
-  display: block; 
-  width: max-content; 
-  max-width: 100%; 
-  padding: 5px;
-  
-  /* Scroll */
-  overflow-x: auto; 
-  white-space: nowrap; 
-}
-
-</style>
 
 
 
