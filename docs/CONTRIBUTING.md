@@ -1,3 +1,9 @@
+# 🚀 Agile Scrum Project
+Welcome to our project management board! This workspace is dedicated to tracking our Agile software development lifecycle, managing Sprints (iterations), and coordinating team efforts throughout the development process.
+
+# 📌 Project Overview
+This is the single source of truth for our product backlog, Sprint planning, and daily development tasks. We strictly adhere to Scrum methodologies to ensure iterative delivery and continuous improvement.
+
 # 🌍 Language Policy 
 **Project Management** (Issues/Kanban) is conducted in **Chinese** :cn:.  
 **Version Control** (Commits/Branches) must be in **English** :gb:.
@@ -96,6 +102,56 @@ git fetch --prune
 # 3. Delete your local feature branch
 git branch -d <your-branch-name>
 ```
+
+# Project Views
+To maintain a clear and focused workflow, this board uses filters and custom fields to divide the workspace into the following dedicated views:
+
+- **_Current Sprint_**  
+The active development board. It displays only the user stories and specific tasks scheduled for the current iteration, and automatically hides high-level epics.
+
+- **_Product Backlog_**  
+The holding pool for all unassigned tasks, ideas, and future features.
+
+## Product Backlog
+The Product Backlog uses a tree structure to manage requirements, with clear parent-child relationships between levels. From highest to lowest, it is divided into the following three tiers:
+ 
+- **_Epic_**  
+Represents high-level business requirements or large feature modules. It typically contains multiple related user stories. Due to its large size, it is expected to be completed gradually over one or more Sprints.
+
+- **_User story_**  
+Specific requirements from the user's perspective, helping the team more accurately understand customer goals. To facilitate development, a user story is usually split into multiple specific technical tasks for assignment and execution.
+
+- **_Task_**  
+The lowest level of execution. In an ideal state, team members can independently claim the tasks they want to work on. Dependencies and sequential orders between tasks should be minimized to maximize parallel development efficiency.
+
+## Board Workflow & Task Lifecycle
+In the Current Sprint board, tasks will strictly flow from left to right through the following status columns:
+
+1. **_User story_**  
+The core features to be implemented in the current Sprint, serving as the parent nodes for specific development tasks.
+
+2. **_To do_**  
+Tasks that need to be completed but are currently waiting to be claimed.
+
+3. **_In progress_**  
+The task has been claimed, and developers are currently writing code or working on it.
+(After linking a PR with an Issue, the corresponding Issue card will automatically move from "In progress" to "In review")
+
+4. **In review_**  
+A Pull Request has been submitted and is waiting for review by other team members.
+
+5. **_Done_**  
+Tasks that have had their PRs successfully merged and meet the team's "Definition of Done" (DoD).
+
+# Board Usage Guide
+**_For Developers_**  
+Focus closely on the Current Sprint view. Proactively claim tasks from the Todo column by setting yourself as the Assignee, and drag the card to In Progress when you begin coding.
+
+**_For Sprint Planning Meetings_**   
+The Scrum Master will pull high-priority stories from the Product Backlog, assign them the current cycle's Iteration, and ensure they are linked to the correct Epic so the system can automatically aggregate the progress bar.
+
+**_Daily Updates_**  
+Please ensure you update the status and progress of your assigned task cards before the start of the Daily Stand-up every day.
 
 
 
