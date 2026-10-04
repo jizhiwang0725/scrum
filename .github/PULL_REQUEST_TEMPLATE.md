@@ -1,8 +1,8 @@
 ## PR概述（Description） 
-概括此PR的内容
+[概括此PR的内容]
 
 ## 关联Issue（Related Issue）
-Closes # (切换到英文输入法，在此填入Issue编号)
+Closes [请以'#'开头填写母体用户故事的Issue编号]
 
 ## 更改类型（Type of Change）
 在[ ]中打入‘x’勾选相关的选项（请只选择一项）
@@ -13,7 +13,7 @@ Closes # (切换到英文输入法，在此填入Issue编号)
 - [ ] 工作与日常杂项 (`chore`)
 
 ## 测试说明（Testing Instructions）
-请简要说明审查者如何在本地测试这些更改。
+[请简要说明审查者如何在本地测试这些更改。]
 
 ## 开发者自检清单 (Developer Checklist)
 在[ ]中打入‘x’勾选
