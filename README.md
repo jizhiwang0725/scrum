@@ -5,12 +5,13 @@ This is a full-stack web application
 ## Tech Stack 
 
 **Frontend:**
-- React + Vite
-- Tailwind CSS v4
-- shadcn/ui
+- **Core Framework:** React 18 + TypeScript
+- **Build Tool:** Vite (Lightning-fast cold starts and HMR)
+- **Styling:** Tailwind CSS v4 (Utility-first CSS)
+- **Component Library:** shadcn/ui (Accessible, highly customizable UI foundation)
 
 **Backend:**
-- Rust
+- **Programming Language**: Rust
 
 ## Project Structure 
 
