@@ -136,7 +136,7 @@ Tasks that need to be completed but are currently waiting to be claimed.
 The task has been claimed, and developers are currently writing code or working on it.
 (After linking a PR with an Issue, the corresponding Issue card will automatically move from "In progress" to "In review")
 
-4. **In review_**  
+4. **_In review_**  
 A Pull Request has been submitted and is waiting for review by other team members.
 
 5. **_Done_**  
@@ -151,6 +151,53 @@ The Scrum Master will pull high-priority stories from the Product Backlog, assig
 
 **_Daily Updates_**  
 Please ensure you update the status and progress of your assigned task cards before the start of the Daily Stand-up every day.
+
+# Frontend Design System
+
+To ensure a consistent visual identity for the application, please strictly adhere to the following design guidelines during development.
+
+## Color Palette
+The project uses HSL variables for global color. Always use Tailwind's semantic utility classes (e.g., `bg-primary`) instead of hardcoding color values.
+
+***Primary Brand Color***  
+`hsl(24.6 95% 53.1%)` - A vibrant orange used for primary buttons and core interactive elements.
+
+***Light Mode Background***  
+`hsl(40 30% 97%)` - Oatmeal/Cream white, creating a warm, kitchen-friendly atmosphere.
+
+***Dark Mode Background***  
+`hsl(24 10% 10%)` - Dark roast coffee black, reducing eye strain while maintaining a premium feel.
+
+
+## Typography
+Configured globally in `index.css`.
+
+To achieve a minimalist aesthetic, we have selected the following fonts:
+
+***Title***  
+`Syne`
+
+***Text***  
+`Inter`
+
+
+***Type Scale***
+  - `text-4xl` / `text-5xl`: Hero sections and main page titles.
+  - `text-2xl`: Section headers.
+  - `text-base`: Default body text and cooking descriptions.
+  - `text-sm`: Auxiliary information and hints.
+
+## UI Components
+Our underlying UI architecture is powered by **shadcn/ui (Base UI)**.
+
+To find more available components, please visit :point_right: [shadcn/ui Offical Website](https://ui.shadcn.com/)
+
+***Adding Components***  
+When a new component is needed, use the CLI command   
+```bash
+npx shadcn@latest add [component-name]
+```
+Please refrain from building complex interactive components from scratch if a shadcn alternative exists.
 
 
 
