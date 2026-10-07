@@ -4,11 +4,14 @@ import { Button } from "@/components/ui/button"
 // Main page
 function Home() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
-      <h1 className="text-4xl font-bold text-blue-600 mb-4">
+    <div className="font-heading min-h-screen bg-background text-foreground flex flex-col items-center justify-center">
+      <h1 className="text-9xl">
         Hello Tailwind & React! 🎉
       </h1>
-      <p className="text-gray-600 mb-8">如果这段文字居中且标题是蓝色的，说明 Tailwind 配置成功了。</p>
+      
+      <p className="text-foreground">
+        Hello
+      </p>
       
       <Button>
         <Link to="/about">
