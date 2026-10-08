@@ -102,3 +102,4 @@ $RECYCLE.BIN/
 
 #ai配置文件 
 /.agents/
+backend/target/
