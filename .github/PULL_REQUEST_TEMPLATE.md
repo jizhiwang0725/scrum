@@ -2,7 +2,7 @@
 [概括此PR的内容]
 
 ## 关联Issue（Related Issue）
-Closes [请以'#'开头填写母体用户故事的Issue编号]
+Closes [请以'#'开头填写相关的Issue编号]
 
 ## 更改类型（Type of Change）
 在[ ]中打入‘x’勾选相关的选项（请只选择一项）
