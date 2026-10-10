@@ -102,3 +102,6 @@ $RECYCLE.BIN/
 
 #ai配置文件 
 /.agents/
+
+# Rust build artifacts
+/backend/target/
