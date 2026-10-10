@@ -1,6 +1,27 @@
-use axum::{extract::Query, routing::get, Json, Router};
+use axum::{
+    extract::{Query, State}, 
+    routing::get, 
+    Json, 
+    Router
+};
 use serde::{Deserialize, Serialize};
 use axum::http::StatusCode;
+use std::sync::Arc;
+use crate::state::AppState;
+
+#[derive(Serialize)]
+struct StateSummary{
+    recipe_count: usize,
+}
+
+/// Reports how many recipte names are available in shared state
+async fn inspect_state(
+    State(state): State<Arc<AppState>>,
+) -> Json <StateSummary>{
+    Json(StateSummary{
+        recipe_count: state.recipe_names.len(),
+    })
+}
 
 #[derive(Serialize)]
 struct HealthResponse{
@@ -41,8 +62,10 @@ async fn health() -> Json<HealthResponse>{
 }
 
 ///Builds the application's HTTP routes
-pub fn build_app() -> Router{
+pub fn build_app(state: Arc<AppState>) -> Router{
     Router::new()
         .route("/api/health", get(health))
         .route("/api/debug/query", get(echo_query))
+        .route("/api/debug/state", get(inspect_state))
+        .with_state(state)
 }
