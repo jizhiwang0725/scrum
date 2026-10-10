@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
 import { Button } from "@/components/ui/button"
+import NotFound from '@/pages/NotFound'
+import StatePreview from '@/pages/StatePreview'
 
 // Main page
 function Home() {
@@ -29,6 +31,10 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
+        {import.meta.env.DEV && (
+          <Route path="/dev/ui-states" element={<StatePreview />} />
+        )}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   )

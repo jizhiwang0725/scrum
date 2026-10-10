@@ -97,3 +97,11 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+# 本地菜谱爬虫：程序、数据和抓取进度均不提交到 Git
+/tools/xiachufang-crawler/
+
+#ai配置文件 
+/.agents/
+
+# Rust build artifacts
+/backend/target/

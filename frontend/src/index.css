@@ -49,7 +49,7 @@
 }
 
 :root {
-    --background: hsl(38 25% 94%);
+    --background: hsl(40 30% 97%);
     --foreground: hsl(20 14.3% 4.1%);
     --card: hsl(38 25% 94%);
     --card-foreground: hsl(20 14.3% 4.1%);
@@ -86,7 +86,7 @@
 .dark {
     --background: hsl(24 10% 10%);
     --foreground: hsl(38 25% 94%);
-    --card: hsl(24 10% 98%);
+    --card: hsl(24 10% 12%);
     --card-foreground: hsl(38 25% 94%);
     --popover: oklch(0.205 0 0);
     --popover-foreground: oklch(0.985 0 0);
