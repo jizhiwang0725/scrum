@@ -1,22 +1,22 @@
-use axum::{routing::get, Json, Router};
-use serde::Serialize;
+mod app;
+mod state;
 
-#[derive(Serialize)]
-struct HealthResponse{
-    status: &'static str,
-}
-
-async fn health() -> Json<HealthResponse>{
-    Json(HealthResponse { status: "ok"}) //Return Json Response
-}
+use crate::state::AppState;
+use std::sync::Arc;
 
 #[tokio::main]
-async fn main() -> std::io::Result<()>{
-    let app = Router::new().route("/api/health", get(health));
+async fn main() -> std::io::Result<()> {
+    let state = Arc::new(AppState {
+        recipe_names: vec!["番茄炒蛋".to_string(), "土豆炖牛肉".to_string()],
+    });
 
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:3000").await?;
-        //listen to 3000 port
+    let app = app::build_app(state);
 
-    println!("Server: http://127.0.0.1:3000");
-    axum::serve(listener, app).await //Receive Request
+    let bind_addr = std::env::var("BIND_ADDR").unwrap_or_else(|_| "127.0.0.1:3000".to_string());
+
+    // Listen only on the local maching during development
+    let listener = tokio::net::TcpListener::bind(bind_addr.as_str()).await?;
+
+    println!("Server: http://{bind_addr}");
+    axum::serve(listener, app).await
 }
