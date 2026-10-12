@@ -5,7 +5,6 @@ import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import Home from "@/pages/Home";
 import ResultsPage from "@/pages/ResultsPage";
 import NotFound from "@/pages/NotFound";
-import StatePreview from "@/pages/StatePreview";
 import RecipeDetail, {
   type Recipe,
   type RecipeListLoader,
@@ -78,9 +77,7 @@ export default function App() {
 
         {/* 详细页面 */}
         <Route path="/recipe/:id" element={<RecipeDetail />} />
-        {import.meta.env.DEV && (
-          <Route path="/dev/ui-states" element={<StatePreview />} />
-        )}
+
         {import.meta.env.DEV && (
           <Route
             path="/dev/recipe/:id"
