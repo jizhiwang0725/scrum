@@ -74,7 +74,7 @@ export default function App() {
         <Route path="/" element={<Home />} />
 
         {/* 搜索页 */}
-        <Route path="/results/:query" element={<ResultsPage />} />
+        <Route path="/results" element={<ResultsPage />} />
 
         {/* 详细页面 */}
         <Route path="/recipe/:id" element={<RecipeDetail />} />

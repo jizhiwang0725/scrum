@@ -20,7 +20,7 @@ export default function Home() {
   const handleSearch = (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!query.trim()) return;
-    navigate(`/results/${encodeURIComponent(query)}`);
+    navigate(`/results?keyword=${encodeURIComponent(query)}`);
   };
 
   return (
