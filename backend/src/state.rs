@@ -1,3 +1,5 @@
+use crate::models::Recipe;
+
 pub struct AppState {
-    pub recipe_names: Vec<String>,
+    pub recipes: Vec<Recipe>,
 }
