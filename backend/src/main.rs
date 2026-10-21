@@ -1,6 +1,8 @@
 mod app;
 mod config;
+mod error;
 mod http;
+mod query;
 mod state;
 
 use crate::state::AppState;

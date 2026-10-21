@@ -1,11 +1,15 @@
-use crate::state::AppState;
-use axum::http::StatusCode;
+use crate::{
+    error::{ALLOWED_METHODS, ApiError},
+    query::{SearchParams, parse_search_query},
+    state::AppState,
+};
 use axum::{
     Json, Router,
-    extract::{Query, State},
+    extract::{RawQuery, State},
+    http::{StatusCode, header},
     routing::get,
 };
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use std::sync::Arc;
 
 #[derive(Serialize)]
@@ -13,7 +17,6 @@ struct StateSummary {
     recipe_count: usize,
 }
 
-/// Reports how many recipte names are available in shared state
 async fn inspect_state(State(state): State<Arc<AppState>>) -> Json<StateSummary> {
     Json(StateSummary {
         recipe_count: state.recipe_names.len(),
@@ -25,41 +28,49 @@ struct HealthResponse {
     status: &'static str,
 }
 
-/// Query parameters
-#[derive(Deserialize)]
-struct SearchParams {
-    q: Option<String>,
-}
-
-/// Echoes the received query value for inspection
+/// Debug-only response: not the public RecipeList response.
 #[derive(Serialize)]
 struct QueryEcho {
-    q: Option<String>,
+    demo: bool,
+    params: SearchParams,
 }
 
-async fn echo_query(
-    query: Query<SearchParams>,
-) -> Result<Json<QueryEcho>, (StatusCode, &'static str)> {
-    let params = query.0;
+async fn echo_query(RawQuery(raw): RawQuery) -> Result<Json<QueryEcho>, ApiError> {
+    let params = parse_search_query(raw.as_deref())?;
+    // Current state contains recipe names only; ingredient search is not wired yet.
+    params.ensure_supported(false)?;
+    Ok(Json(QueryEcho { demo: true, params }))
+}
 
-    if let Some(q) = &params.q {
-        if q.chars().count() > 100 {
-            return Err((StatusCode::BAD_REQUEST, "q must be at most 100 chs"));
-        }
+async fn health(RawQuery(raw): RawQuery) -> Result<Json<HealthResponse>, ApiError> {
+    if raw.as_deref().is_some_and(|query| !query.is_empty()) {
+        return Err(ApiError::invalid("query", "此接口不接受查询参数。"));
     }
-    Ok(Json(QueryEcho { q: params.q }))
+    Ok(Json(HealthResponse { status: "ok" }))
 }
 
-/// Reports HTTP server availability without checking external dependencies
-async fn health() -> Json<HealthResponse> {
-    Json(HealthResponse { status: "ok" })
+async fn options() -> impl axum::response::IntoResponse {
+    (StatusCode::NO_CONTENT, [(header::ALLOW, ALLOWED_METHODS)])
 }
 
-///Builds the application's HTTP routes
+async fn not_found() -> ApiError {
+    ApiError::not_found()
+}
+
+async fn method_not_allowed() -> ApiError {
+    ApiError::method_not_allowed()
+}
+
 pub fn build_app(state: Arc<AppState>) -> Router {
     Router::new()
-        .route("/api/health", get(health))
-        .route("/api/debug/query", get(echo_query))
-        .route("/api/debug/state", get(inspect_state))
+        .route("/api/health", get(health).options(options))
+        .route("/api/debug/query", get(echo_query).options(options))
+        .route("/api/debug/state", get(inspect_state).options(options))
+        .fallback(not_found)
+        .method_not_allowed_fallback(method_not_allowed)
         .with_state(state)
 }
+
+#[cfg(test)]
+#[path = "app_tests.rs"]
+mod tests;
