@@ -1,113 +1,138 @@
-# B: request validation and JSON errors
+# Request validation and JSON errors
 
-## Scope
+## Purpose and module responsibilities
 
-This change integrates B's parameter module into the team's existing Axum skeleton.
-It does not implement recipe loading or #28 search. The existing AppState has only
-recipe_names, not the 50 complete recipes required by docs/api.md.
+This change adds strict request validation to the current Axum backend.
+The current state::AppState contains recipe_names, not complete recipe records.
 
-- GET /api/health now rejects query parameters with INVALID_QUERY.
-- GET /api/debug/query validates the complete search query and returns an explicitly
-  marked debug echo for supported requests. Its debug JSON is not RecipeList.
-- GET /api/debug/state retains its shared-state inspection behavior.
-- GET/HEAD use the same validation; HEAD has no response body.
-- Existing routes accept OPTIONS. Existing CORS and request logging are retained.
-- Router-level 404 and 405 responses use the error envelope. 405 has
-  Allow: GET, HEAD, OPTIONS.
-- /api/recipes is not registered in this B-only change. A/C must wire the actual
-  handler after complete recipe data and the search function are available.
-- The old independent search_api project is not imported or used.
+| Module | Responsibility |
+| --- | --- |
+| main.rs | Initialize state and logging, call app::build_app and http::with_middleware, start the server. |
+| app.rs | Register HTTP routes, extract requests, invoke query.rs functions and return responses. |
+| query.rs | Decode and validate search parameters, normalize text and check feature availability. |
+| error.rs | Build ApiError and convert it into the documented JSON error envelope. |
+| state.rs | Define the shared AppState read by app::inspect_state. |
+| http.rs | Apply CORS and request logging; convert successful CORS preflights to 204. |
+| config.rs | Parse and validate configured frontend origins. |
+| query_tests.rs | Test parsing, normalization, limits and feature-support rules. |
+| app_tests.rs | Test HTTP responses with the existing middleware installed. |
 
-## Query contract
+## Current endpoints
 
-parse_search_query(raw: Option<&str>) returns SearchParams or ApiError.
+- GET /api/health returns status=ok and rejects nonempty query strings.
+- GET /api/debug/query returns a marked debug echo of supported, validated parameters.
+  Its response is not the public recipe-list response.
+- GET /api/debug/state reports the number of names in state::AppState.
+- HEAD uses the corresponding GET status and headers without a response body.
+- Known routes accept OPTIONS. Existing CORS configuration and logging remain active.
+- Router-level 404 and 405 responses use the JSON error envelope.
+- 405 responses include Allow: GET, HEAD, OPTIONS.
 
-1. Decode each key/value exactly once. Plus means space; %2B means literal plus.
-   Reject malformed percent escapes and invalid UTF-8 with field=query.
-2. Reject unknown names and duplicates, including encoded duplicate names.
-3. Check q's decoded length <=100 codepoints BEFORE normalization. Missing/empty
-   q means no name restriction, never a default tomato query.
-4. NFKC, lowercase, trim and collapse Unicode whitespace. Preserve q as one phrase.
-5. ingredients: decoded <=1000 codepoints, NFKC, split on ASCII/Chinese commas or
-   Unicode whitespace, remove empty tokens, <=20 tokens before deduplication,
-   normalized item length <=50. Alias 土豆->马铃薯, 西红柿->番茄, then deduplicate.
-6. sort: exact relevance/time_asc/time_desc; absent defaults to relevance.
-   Empty sort, whitespace and case changes are invalid.
-7. dietary_tags: decoded <=100 codepoints, ASCII comma splitting, trim, remove
-   empties, validate the four enums, deduplicate, <=4 unique tags.
-8. Only after all validation call params.ensure_supported(ingredient_search).
-   Time sorting and nonempty dietary tags remain unsupported. Pass true for
-   ingredient_search only when the real ingredient filter is connected.
-   The current debug route passes false, so valid nonempty ingredients produce
-   UNSUPPORTED_PARAMETER, never silently ignored filters.
+The public /api/recipes route is not registered yet. Complete recipe loading,
+search, ranking and the RecipeList response still require integration.
 
-The parser treats an empty query string as no parameters and ignores empty '&'
-segments, following normal form-query conventions. A bare known key such as q
-is treated as an empty value. Health rejects any nonempty raw query string.
-These ambiguous edge conventions can be tightened if the team changes its card.
+## Parameter processing
 
-## A/C/#28 integration
-
-The future /api/recipes handler should start with:
+app::echo_query obtains the original RawQuery and calls:
 
 ~~~rust
 let params = crate::query::parse_search_query(raw.as_deref())?;
-params.ensure_supported(true)?; // only after ingredient search is connected
+params.ensure_supported(false)?;
 ~~~
 
-Then call #28 with params.q and params.ingredients, and return C's complete
-RecipeList { items, total }. An empty q / ingredients means no restriction.
-Normalize dataset titles using query::normalize_text and dataset ingredient
-names using query::normalize_ingredient. Keep the original dataset values in
-the output. Filtering, ranking, string-id ordering and alias-equivalent matching
-on the data side belong to #28, not this parser.
+The false argument is intentional: ingredient filtering is not connected to the
+current handler. Pass true only when the calling handler actually applies the
+validated ingredient conditions.
 
-Use error::ApiError for errors so the HTTP response is:
-{"error":{"code":"INVALID_QUERY","message":"查询参数不合法。","details":[...]}}.
-All constructors for 400 provide at least one detail. 404/405 details are [].
-There is no fallible data-loading handler yet; when C introduces one, it must map
-its HTTP failures to a generic 500 INTERNAL_ERROR envelope with empty details,
-without returning internal paths or configuration. Startup I/O errors remain
-startup errors, not HTTP responses.
+parse_search_query performs these checks before any availability check:
 
-D's existing CorsLayer handles OPTIONS before route handlers. Successful
-preflights are already converted to 204 by http.rs. Ordinary OPTIONS may return
-200 with no body, which the API card does not prohibit. Unknown-path OPTIONS
-can be intercepted by this existing CORS layer; A/D should decide whether to
-restrict preflights to known paths when integrating the public routes.
-This patch does not claim to finish that CORS routing policy or all of #27.
+1. Split raw pairs, then decode each key and value exactly once. A plus means a
+   space; %2B means a literal plus. Reject malformed escapes and invalid UTF-8.
+2. Reject unknown and duplicate decoded parameter names.
+3. Limit decoded q to 100 codepoints before normalization. Missing or empty q
+   means no name restriction, not a default recipe name.
+4. Apply NFKC, lowercase, trimming and whitespace collapsing. Keep q as one phrase.
+5. Limit decoded ingredients to 1000 codepoints. Apply NFKC, split on ASCII or
+   Chinese commas and Unicode whitespace, discard empty tokens and allow at most
+   20 nonempty tokens before deduplication. Each normalized item has at most 50
+   codepoints. Canonicalize the two documented potato/tomato aliases and deduplicate.
+6. Accept only the exact sort values relevance, time_asc and time_desc.
+   Missing sort defaults to relevance; an empty value is invalid.
+7. Limit decoded dietary_tags to 100 codepoints. Split on ASCII commas, trim,
+   discard empties, validate the four enum values and deduplicate to at most four tags.
+
+SearchParams::ensure_supported then rejects time sorting and nonempty dietary
+tags. It also rejects nonempty ingredient conditions unless ingredient_search
+is true. Invalid parameters take precedence over unavailable features.
+
+The parser ignores empty ampersand-separated segments. A bare known key is
+treated as an empty value. Health treats an empty raw query as no parameters.
+
+## Matching integration
+
+A future recipe handler should call query::parse_search_query, then
+SearchParams::ensure_supported, then the actual filtering and ranking functions.
+
+Normalize dataset titles with query::normalize_text and ingredient names with
+query::normalize_ingredient. Preserve original recipe text in response objects.
+An empty q or ingredients list means no restriction. Search results must contain
+complete recipe records in items, with total equal to items.len().
+
+No recipe-search or recipe-loading module exists in the supplied backend snapshot;
+this document does not invent names for those future modules.
+
+## Errors
+
+error::ApiError implements IntoResponse. Parameter errors use HTTP 400 and this
+shape:
+
+~~~json
+{
+  "error": {
+    "code": "INVALID_QUERY",
+    "message": "Invalid query parameters.",
+    "details": [
+      {"field": "sort", "message": "Must be relevance, time_asc or time_desc."}
+    ]
+  }
+}
+~~~
+
+All 400 responses contain at least one detail. Entire-query decoding errors use
+field=query. Router-level 404 and 405 responses use an empty details list.
+When data-loading or search handlers are added, their internal failures must map
+to a generic 500 INTERNAL_ERROR envelope without exposing internal paths or secrets.
+
+Error messages and explanatory comments are in English. Unicode search fixtures,
+alias keys and sample recipe names use Rust Unicode escapes in source code so
+their runtime values and test meaning remain unchanged.
 
 ## Verification
 
-Added 14 parser tests and 10 HTTP tests (the HTTP tests include the existing
-CORS middleware). These tests were authored but not executed in the generation
-environment because Rust/Cargo are unavailable there. Run locally:
+All 24 automated tests passed locally: 14 query-parser tests and 10 HTTP tests.
 
-~~~sh
-cargo fmt --manifest-path backend/Cargo.toml
+Command:
+```sh
 cargo test --manifest-path backend/Cargo.toml
-cargo check --manifest-path backend/Cargo.toml
-~~~
+```
 
-Review cargo fmt changes before staging: it may format pre-existing files.
-Cargo.lock must be regenerated by Cargo and included in the commit if tracked;
-this patch does not invent a lockfile.
+Result: 24 passed, 0 failed.
 
 ## Manual checks
 
-Start this TEAM backend, whose default port is 3000:
+Start the team backend on its default port 3000:
 
 ~~~sh
 cargo run --manifest-path backend/Cargo.toml
 ~~~
 
-In a second terminal:
+In another terminal:
 
 ~~~sh
 curl -i 'http://localhost:3000/api/health'
 curl -i 'http://localhost:3000/api/health?q=x'
 curl -i 'http://localhost:3000/api/debug/query?q='
-curl -i -G --data-urlencode 'q= ＴＯＭＡＴＯ  Soup ' 'http://localhost:3000/api/debug/query'
+curl -i 'http://localhost:3000/api/debug/query?q=+TOMATO++Soup+'
 curl -i 'http://localhost:3000/api/debug/query?q=a&%71=b'
 curl -i 'http://localhost:3000/api/debug/query?q=%FF'
 curl -i 'http://localhost:3000/api/debug/query?sort=time_asc'
@@ -116,23 +141,18 @@ curl -i -X POST 'http://localhost:3000/api/health'
 curl -I 'http://localhost:3000/api/health'
 ~~~
 
-Expected, in order:
-200 status=ok; 400 INVALID_QUERY; 200 params.q="";
-200 params.q="tomato soup"; 400 INVALID_QUERY field=q;
-400 INVALID_QUERY field=query; 400 UNSUPPORTED_PARAMETER field=sort;
-400 INVALID_QUERY field=dietary_tags; 405 JSON + Allow; 200 with no body.
+Expected results: 200; 400 INVALID_QUERY; 200 with empty params.q; 200 with
+params.q="tomato soup"; 400 INVALID_QUERY for q; 400 INVALID_QUERY for query;
+400 UNSUPPORTED_PARAMETER for sort; 400 INVALID_QUERY for dietary_tags;
+405 JSON with Allow; and 200 with no body.
 
-Debug success example:
-{"demo":true,"params":{"q":"","ingredients":[],"sort":"relevance","dietary_tags":[]}}
+## Existing CORS behavior
 
-## PR description
+http::with_middleware installs CorsLayer, which can handle OPTIONS before route
+handlers. http::preflight_no_content converts successful preflights to 204.
+Ordinary OPTIONS may return 200 with no body. Unknown-path OPTIONS can also be
+intercepted by the existing CORS layer. Public-route integration should decide
+whether preflights need to be restricted to known paths.
 
-B's original exercise used a tomato default and plain/flat error responses that
-did not match docs/api.md. This change adds strict query decoding, documented
-normalization and limits, all-parameter validation before support checks, and
-the nested JSON error envelope. It integrates the parser into the existing debug
-query route, checks health parameters, and adds router error handlers and tests.
-
-Public recipe search and RecipeList responses remain for A/C/#28 integration.
-Update the validation section of the PR with actual local cargo test results
-before requesting review; do not report these tests as run until they pass.
+This change does not claim to finish recipe search, data integration or that
+CORS routing policy.
