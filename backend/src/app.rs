@@ -12,6 +12,7 @@ use axum::{
 };
 use serde::Serialize;
 use std::sync::Arc;
+use crate::recipes::{get_recipe_by_id, get_recipes, search_recipes};
 
 #[derive(Serialize)]
 // Debug response containing only the number of names in state::AppState.
@@ -23,7 +24,7 @@ struct StateSummary {
 // Read recipe_names without copying the dataset or introducing a lock.
 async fn inspect_state(State(state): State<Arc<AppState>>) -> Json<StateSummary> {
     Json(StateSummary {
-        recipe_count: state.recipe_names.len(),
+        recipe_count: state.recipes.len(),
     })
 }
 
@@ -86,16 +87,14 @@ async fn method_not_allowed() -> ApiError {
 // main.rs subsequently applies http::with_middleware for CORS and request logging.
 pub fn build_app(state: Arc<AppState>) -> Router {
     Router::new()
-        // Register health and debug endpoints. Axum's get also supports HEAD without a body.
-        // The public /api/recipes handler is not registered in this module yet.
         .route("/api/health", get(health).options(options))
         .route("/api/debug/query", get(echo_query).options(options))
         .route("/api/debug/state", get(inspect_state).options(options))
-        // Use a JSON 404 response when no route matches.
+        .route("/api/recipes", get(get_recipes))
+        .route("/api/recipes/{id}", get(get_recipe_by_id))
+        .route("/api/recipes/search/{keyword}", get(search_recipes))
         .fallback(not_found)
-        // Install the JSON 405 handler after registering routes, so it applies to those routes.
         .method_not_allowed_fallback(method_not_allowed)
-        // Provide the shared state required by inspect_state's State extractor.
         .with_state(state)
 }
 

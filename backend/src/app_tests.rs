@@ -6,20 +6,35 @@ use axum::{
 };
 use serde_json::{Value, json};
 use tower::ServiceExt;
-
+use crate::models::Recipe;
 async fn request(method: Method, uri: &str, headers: &[(&str, &str)]) -> Response {
     let state = Arc::new(AppState {
-        recipe_names: vec!["番茄炒蛋".to_owned(), "土豆炖牛肉".to_owned()],
+        recipes: vec![
+            Recipe {
+                id: "1".to_owned(),
+                title: "番茄炒蛋".to_owned(),
+                ingredients: vec![],
+                steps: vec![],
+            },
+            Recipe {
+                id: "2".to_owned(),
+                title: "土豆炖牛肉".to_owned(),
+                ingredients: vec![],
+                steps: vec![],
+            },
+        ],
     });
-    // Test with the team's actual CORS middleware, not only the bare Router.
+
     let app = crate::http::with_middleware(
         build_app(state),
         vec!["http://localhost:5173".parse().unwrap()],
     );
+
     let mut builder = Request::builder().method(method).uri(uri);
     for &(key, value) in headers {
         builder = builder.header(key, value);
     }
+
     app.oneshot(builder.body(Body::empty()).unwrap())
         .await
         .unwrap()

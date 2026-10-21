@@ -4,6 +4,9 @@ mod error;
 mod http;
 mod query;
 mod state;
+mod models;
+mod data;
+mod recipes;
 
 use crate::state::AppState;
 use std::sync::Arc;
@@ -18,8 +21,10 @@ async fn main() -> std::io::Result<()> {
         )
         .init();
 
+    let recipes = data::load_recipes().expect("Failed to load recipes");
+
     let state = Arc::new(AppState {
-        recipe_names: vec!["番茄炒蛋".to_string(), "土豆炖牛肉".to_string()],
+        recipes,
     });
 
     let app = app::build_app(state);
