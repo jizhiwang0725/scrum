@@ -57,7 +57,10 @@ async fn echo_query(RawQuery(raw): RawQuery) -> Result<Json<QueryEcho>, ApiError
 // Reject a nonempty raw query; a missing or empty query string contains no parameters.
 async fn health(RawQuery(raw): RawQuery) -> Result<Json<HealthResponse>, ApiError> {
     if raw.as_deref().is_some_and(|query| !query.is_empty()) {
-        return Err(ApiError::invalid("query", "此接口不接受查询参数。"));
+        return Err(ApiError::invalid(
+            "query",
+            "This endpoint does not accept query parameters.",
+        ));
     }
     Ok(Json(HealthResponse { status: "ok" }))
 }
