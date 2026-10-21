@@ -1,6 +1,8 @@
 mod app;
 mod config;
+mod error;
 mod http;
+mod query;
 mod state;
 mod models;
 mod data;
