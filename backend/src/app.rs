@@ -7,6 +7,7 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
+use crate::recipes::{get_recipe_by_id, get_recipes, search_recipes};
 
 #[derive(Serialize)]
 struct StateSummary {
@@ -16,7 +17,7 @@ struct StateSummary {
 /// Reports how many recipte names are available in shared state
 async fn inspect_state(State(state): State<Arc<AppState>>) -> Json<StateSummary> {
     Json(StateSummary {
-        recipe_count: state.recipe_names.len(),
+        recipe_count: state.recipes.len(),
     })
 }
 
@@ -61,5 +62,8 @@ pub fn build_app(state: Arc<AppState>) -> Router {
         .route("/api/health", get(health))
         .route("/api/debug/query", get(echo_query))
         .route("/api/debug/state", get(inspect_state))
+        .route("/recipes", get(get_recipes))
+        .route("/recipes/{id}", get(get_recipe_by_id))
+        .route("/recipes/search/{keyword}", get(search_recipes))
         .with_state(state)
 }
