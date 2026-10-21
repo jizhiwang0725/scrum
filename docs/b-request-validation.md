@@ -118,6 +118,7 @@ cargo test --manifest-path backend/Cargo.toml
 
 Result: 24 passed, 0 failed.
 
+
 ## Manual checks
 
 Start the team backend on its default port 3000:
