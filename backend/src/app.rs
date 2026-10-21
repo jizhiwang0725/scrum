@@ -62,8 +62,8 @@ pub fn build_app(state: Arc<AppState>) -> Router {
         .route("/api/health", get(health))
         .route("/api/debug/query", get(echo_query))
         .route("/api/debug/state", get(inspect_state))
-        .route("/recipes", get(get_recipes))
-        .route("/recipes/{id}", get(get_recipe_by_id))
-        .route("/recipes/search/{keyword}", get(search_recipes))
+        .route("/api/recipes", get(get_recipes))
+        .route("/api/recipes/{id}", get(get_recipe_by_id))
+        .route("/api/recipes/search/{keyword}", get(search_recipes))
         .with_state(state)
 }
