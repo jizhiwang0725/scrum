@@ -1,4 +1,5 @@
 use super::*;
+use crate::models::Recipe;
 use axum::{
     body::{Body, to_bytes},
     http::{Method, Request},
@@ -6,21 +7,32 @@ use axum::{
 };
 use serde_json::{Value, json};
 use tower::ServiceExt;
-use crate::models::Recipe;
 async fn request(method: Method, uri: &str, headers: &[(&str, &str)]) -> Response {
     let state = Arc::new(AppState {
         recipes: vec![
             Recipe {
                 id: "1".to_owned(),
+                url: String::new(),
                 title: "番茄炒蛋".to_owned(),
+                author: String::new(),
+                author_url: String::new(),
+                description: String::new(),
                 ingredients: vec![],
                 steps: vec![],
+                tips: String::new(),
+                cover_image_urls: vec![],
             },
             Recipe {
                 id: "2".to_owned(),
+                url: String::new(),
                 title: "土豆炖牛肉".to_owned(),
+                author: String::new(),
+                author_url: String::new(),
+                description: String::new(),
                 ingredients: vec![],
                 steps: vec![],
+                tips: String::new(),
+                cover_image_urls: vec![],
             },
         ],
     });
@@ -218,4 +230,59 @@ async fn shared_state_debug_route_still_works() {
     let response = request(Method::GET, "/api/debug/state", &[]).await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(json_body(response).await, json!({"recipe_count": 2}));
+}
+
+#[tokio::test]
+async fn check_recipe_list() {
+    let respon = request(Method::GET, "/api/recipes", &[]).await;
+
+    assert_eq!(respon.status(), StatusCode::OK);
+
+    let body = json_body(respon).await;
+    let items = body["items"].as_array().expect("item must be an array");
+
+    assert_eq!(items.len(), 2);
+    assert_eq!(body["total"], json!(items.len()));
+
+    for item in items {
+        for field in [
+            "id",
+            "title",
+            "url",
+            "author",
+            "author_url",
+            "description",
+            "tips",
+        ] {
+            assert!(item[field].is_string(), "invalid string field: {field}");
+        }
+
+        for field in ["ingredients", "steps", "cover_image_urls"] {
+            assert!(item[field].is_array(), "invalid array field: {field}");
+        }
+    }
+}
+
+#[tokio::test]
+async fn check_empty_return() {
+    let state = Arc::new(AppState { recipes: vec![] });
+
+    let app = crate::http::with_middleware(
+        build_app(state),
+        vec!["http://localhost:5173".parse().unwrap()],
+    );
+
+    let respon = app
+        .oneshot(
+            Request::builder()
+                .method(Method::GET)
+                .uri("/api/recipes")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(respon.status(), StatusCode::OK);
+    assert_eq!(json_body(respon).await, json!({"items" : [], "total" : 0}),);
 }

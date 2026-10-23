@@ -1,15 +1,16 @@
-use crate::models::{Recipe, RecipeSummary};
+use crate::models::{Recipe, RecipeListResponse, RecipeSummary};
 use crate::state::AppState;
 use axum::{
-    extract::{Path, State},
     Json,
+    extract::{Path, State},
 };
 use std::sync::Arc;
 
-pub async fn get_recipes(
-    State(state): State<Arc<AppState>>,
-) -> Json<Vec<Recipe>> {
-    Json(state.recipes.clone())
+pub async fn get_recipes(State(state): State<Arc<AppState>>) -> Json<RecipeListResponse> {
+    let items = state.recipes.clone();
+    let total = items.len();
+
+    Json(RecipeListResponse { items, total })
 }
 
 pub async fn get_recipe_by_id(
