@@ -10,18 +10,30 @@ use crate::models::Recipe;
 async fn request(method: Method, uri: &str, headers: &[(&str, &str)]) -> Response {
     let state = Arc::new(AppState {
         recipes: vec![
-            Recipe {
-                id: "1".to_owned(),
-                title: "番茄炒蛋".to_owned(),
-                ingredients: vec![],
-                steps: vec![],
-            },
-            Recipe {
-                id: "2".to_owned(),
-                title: "土豆炖牛肉".to_owned(),
-                ingredients: vec![],
-                steps: vec![],
-            },
+        Recipe {
+            id: "1".to_owned(),
+            url: String::new(),
+            title: "番茄炒蛋".to_owned(),
+            author: String::new(),
+            author_url: String::new(),
+            description: String::new(),
+            ingredients: vec![],
+            steps: vec![],
+            tips: String::new(),
+            cover_image_urls: vec![],
+   },
+        Recipe {
+            id: "2".to_owned(),
+            url: String::new(),
+            title: "土豆炖牛肉".to_owned(),
+            author: String::new(),
+            author_url: String::new(),
+            description: String::new(),
+            ingredients: vec![],
+            steps: vec![],
+            tips: String::new(),
+            cover_image_urls: vec![],
+        },
         ],
     });
 
