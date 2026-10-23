@@ -1,4 +1,5 @@
 //! HTTP routes connecting Axum extractors, query.rs validation, error.rs responses and state.rs.
+use crate::recipes::{get_recipe_by_id, get_recipes, search_recipes};
 use crate::{
     error::{ALLOWED_METHODS, ApiError},
     query::{SearchParams, parse_search_query},
@@ -12,7 +13,6 @@ use axum::{
 };
 use serde::Serialize;
 use std::sync::Arc;
-use crate::recipes::{get_recipe_by_id, get_recipes, search_recipes};
 
 #[derive(Serialize)]
 // Debug response containing only the number of names in state::AppState.

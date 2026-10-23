@@ -1,12 +1,12 @@
 mod app;
 mod config;
+mod data;
 mod error;
 mod http;
-mod query;
-mod state;
 mod models;
-mod data;
+mod query;
 mod recipes;
+mod state;
 
 use crate::state::AppState;
 use std::sync::Arc;
@@ -23,9 +23,7 @@ async fn main() -> std::io::Result<()> {
 
     let recipes = data::load_recipes().expect("Failed to load recipes");
 
-    let state = Arc::new(AppState {
-        recipes,
-    });
+    let state = Arc::new(AppState { recipes });
 
     let app = app::build_app(state);
 
