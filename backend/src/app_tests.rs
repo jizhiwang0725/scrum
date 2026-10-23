@@ -286,3 +286,31 @@ async fn check_empty_return() {
     assert_eq!(respon.status(), StatusCode::OK);
     assert_eq!(json_body(respon).await, json!({"items" : [], "total" : 0}),);
 }
+
+#[tokio::test]
+async fn recipe_endpoint_filters_by_title() {
+    let response = request(Method::GET, "/api/recipes?q=%E7%95%AA%E8%8C%84", &[]).await;
+
+    assert_eq!(response.status(), StatusCode::OK);
+
+    let body = json_body(response).await;
+
+    let items = body["items"]
+        .as_array()
+        .expect("Expected items to be an array");
+
+    assert_eq!(body["total"], 1);
+    assert_eq!(items.len(), 1);
+    assert_eq!(items[0]["id"], "1");
+}
+
+#[tokio::test]
+async fn recipe_endpoint_rejects_duplicate_query() {
+    let response = request(Method::GET, "/api/recipes?q=a&q=b", &[]).await;
+
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+
+    let body = json_body(response).await;
+
+    assert_eq!(body["error"]["code"], "INVALID_QUERY");
+}

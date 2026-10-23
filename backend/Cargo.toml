@@ -21,3 +21,4 @@ tracing = "0.1"
 
 #  Collect logs, display them in the terminal, and control which log levels are shown.
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+strsim = "0.11.1"

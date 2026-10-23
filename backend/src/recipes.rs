@@ -1,16 +1,27 @@
+use crate::error::ApiError;
 use crate::models::{Recipe, RecipeListResponse, RecipeSummary};
+use crate::query::parse_search_query;
+use crate::search;
 use crate::state::AppState;
+
 use axum::{
     Json,
-    extract::{Path, State},
+    extract::{Path, RawQuery, State},
 };
 use std::sync::Arc;
 
-pub async fn get_recipes(State(state): State<Arc<AppState>>) -> Json<RecipeListResponse> {
-    let items = state.recipes.clone();
+pub async fn get_recipes(
+    State(state): State<Arc<AppState>>,
+    RawQuery(raw): RawQuery,
+) -> Result<Json<RecipeListResponse>, ApiError> {
+    let params = parse_search_query(raw.as_deref())?;
+
+    params.ensure_supported(false)?;
+
+    let items = search::search_recipes(&state.recipes, &params.q);
     let total = items.len();
 
-    Json(RecipeListResponse { items, total })
+    Ok(Json(RecipeListResponse { items, total }))
 }
 
 pub async fn get_recipe_by_id(

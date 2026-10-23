@@ -1,4 +1,3 @@
-//! HTTP routes connecting Axum extractors, query.rs validation, error.rs responses and state.rs.
 use crate::recipes::{get_recipe_by_id, get_recipes, search_recipes};
 use crate::{
     error::{ALLOWED_METHODS, ApiError},
@@ -15,7 +14,6 @@ use serde::Serialize;
 use std::sync::Arc;
 
 #[derive(Serialize)]
-// Debug response containing only the number of names in state::AppState.
 struct StateSummary {
     recipe_count: usize,
 }
@@ -29,27 +27,20 @@ async fn inspect_state(State(state): State<Arc<AppState>>) -> Json<StateSummary>
 }
 
 #[derive(Serialize)]
-// Serialize the health response as { "status": "ok" }.
 struct HealthResponse {
     status: &'static str,
 }
 
 #[derive(Serialize)]
-// Echo normalized parameters for debugging; this is not the public recipe-list response.
-// The demo field makes the temporary response explicit.
 struct QueryEcho {
     demo: bool,
     params: SearchParams,
 }
 
-// RawQuery provides the original query string without permissive decoding.
-// Pass it to query::parse_search_query to detect invalid escapes, UTF-8 and duplicate keys.
 async fn echo_query(RawQuery(raw): RawQuery) -> Result<Json<QueryEcho>, ApiError> {
     // Validate every parameter first. The ? operator returns ApiError immediately on failure.
     let params = parse_search_query(raw.as_deref())?;
-    // Then call query::SearchParams::ensure_supported.
-    // state::AppState currently contains names only, so ingredient filtering is unavailable.
-    // Keep this false until a handler actually applies the validated ingredient conditions.
+
     params.ensure_supported(false)?;
     Ok(Json(QueryEcho { demo: true, params }))
 }
@@ -83,8 +74,6 @@ async fn method_not_allowed() -> ApiError {
     ApiError::method_not_allowed()
 }
 
-// Called by main.rs to build routes with Arc<state::AppState>.
-// main.rs subsequently applies http::with_middleware for CORS and request logging.
 pub fn build_app(state: Arc<AppState>) -> Router {
     Router::new()
         .route("/api/health", get(health).options(options))
