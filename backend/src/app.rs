@@ -1,20 +1,27 @@
-use crate::state::AppState;
-use axum::http::StatusCode;
+//! HTTP routes connecting Axum extractors, query.rs validation, error.rs responses and state.rs.
+use crate::{
+    error::{ALLOWED_METHODS, ApiError},
+    query::{SearchParams, parse_search_query},
+    state::AppState,
+};
 use axum::{
     Json, Router,
-    extract::{Query, State},
+    extract::{RawQuery, State},
+    http::{StatusCode, header},
     routing::get,
 };
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use std::sync::Arc;
 use crate::recipes::{get_recipe_by_id, get_recipes, search_recipes};
 
 #[derive(Serialize)]
+// Debug response containing only the number of names in state::AppState.
 struct StateSummary {
     recipe_count: usize,
 }
 
-/// Reports how many recipte names are available in shared state
+// Axum's State extractor provides the Arc<AppState> installed by build_app.
+// Read recipe_names without copying the dataset or introducing a lock.
 async fn inspect_state(State(state): State<Arc<AppState>>) -> Json<StateSummary> {
     Json(StateSummary {
         recipe_count: state.recipes.len(),
@@ -22,48 +29,76 @@ async fn inspect_state(State(state): State<Arc<AppState>>) -> Json<StateSummary>
 }
 
 #[derive(Serialize)]
+// Serialize the health response as { "status": "ok" }.
 struct HealthResponse {
     status: &'static str,
 }
 
-/// Query parameters
-#[derive(Deserialize)]
-struct SearchParams {
-    q: Option<String>,
-}
-
-/// Echoes the received query value for inspection
 #[derive(Serialize)]
+// Echo normalized parameters for debugging; this is not the public recipe-list response.
+// The demo field makes the temporary response explicit.
 struct QueryEcho {
-    q: Option<String>,
+    demo: bool,
+    params: SearchParams,
 }
 
-async fn echo_query(
-    query: Query<SearchParams>,
-) -> Result<Json<QueryEcho>, (StatusCode, &'static str)> {
-    let params = query.0;
+// RawQuery provides the original query string without permissive decoding.
+// Pass it to query::parse_search_query to detect invalid escapes, UTF-8 and duplicate keys.
+async fn echo_query(RawQuery(raw): RawQuery) -> Result<Json<QueryEcho>, ApiError> {
+    // Validate every parameter first. The ? operator returns ApiError immediately on failure.
+    let params = parse_search_query(raw.as_deref())?;
+    // Then call query::SearchParams::ensure_supported.
+    // state::AppState currently contains names only, so ingredient filtering is unavailable.
+    // Keep this false until a handler actually applies the validated ingredient conditions.
+    params.ensure_supported(false)?;
+    Ok(Json(QueryEcho { demo: true, params }))
+}
 
-    if let Some(q) = &params.q {
-        if q.chars().count() > 100 {
-            return Err((StatusCode::BAD_REQUEST, "q must be at most 100 chs"));
-        }
+// Report HTTP availability without checking data loading or external dependencies.
+// Reject a nonempty raw query; a missing or empty query string contains no parameters.
+async fn health(RawQuery(raw): RawQuery) -> Result<Json<HealthResponse>, ApiError> {
+    if raw.as_deref().is_some_and(|query| !query.is_empty()) {
+        return Err(ApiError::invalid(
+            "query",
+            "This endpoint does not accept query parameters.",
+        ));
     }
-    Ok(Json(QueryEcho { q: params.q }))
+    Ok(Json(HealthResponse { status: "ok" }))
 }
 
-/// Reports HTTP server availability without checking external dependencies
-async fn health() -> Json<HealthResponse> {
-    Json(HealthResponse { status: "ok" })
+// Return the route-level OPTIONS response with no body and an Allow header.
+// http::with_middleware installs CorsLayer, which may handle OPTIONS before this handler.
+// http::preflight_no_content converts successful CORS preflight responses to 204.
+async fn options() -> impl axum::response::IntoResponse {
+    (StatusCode::NO_CONTENT, [(header::ALLOW, ALLOWED_METHODS)])
 }
 
-///Builds the application's HTTP routes
+// Delegate unmatched-path errors to error::ApiError::not_found.
+async fn not_found() -> ApiError {
+    ApiError::not_found()
+}
+
+// Delegate unsupported-method errors to error::ApiError::method_not_allowed.
+async fn method_not_allowed() -> ApiError {
+    ApiError::method_not_allowed()
+}
+
+// Called by main.rs to build routes with Arc<state::AppState>.
+// main.rs subsequently applies http::with_middleware for CORS and request logging.
 pub fn build_app(state: Arc<AppState>) -> Router {
     Router::new()
-        .route("/api/health", get(health))
-        .route("/api/debug/query", get(echo_query))
-        .route("/api/debug/state", get(inspect_state))
+        .route("/api/health", get(health).options(options))
+        .route("/api/debug/query", get(echo_query).options(options))
+        .route("/api/debug/state", get(inspect_state).options(options))
         .route("/api/recipes", get(get_recipes))
         .route("/api/recipes/{id}", get(get_recipe_by_id))
         .route("/api/recipes/search/{keyword}", get(search_recipes))
+        .fallback(not_found)
+        .method_not_allowed_fallback(method_not_allowed)
         .with_state(state)
 }
+
+// Compile app_tests.rs only when tests are enabled.
+#[cfg(test)]
+#[path = "app_tests.rs"]
+mod tests;
