@@ -2,13 +2,13 @@ import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import mockRecipes from "@/data/recipes.json";
 
-// 配件
-import { Search, ChevronLeft } from "lucide-react"; // 引入了返回箭头图标
+// Components
+import { Search, ChevronLeft } from "lucide-react"; // Arrow sign for "back" button
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-// 假的数据结构
+// Fake data structure
 export type Recipe = {
   id: string;
   title: string;
@@ -19,13 +19,14 @@ export type Recipe = {
 };
 
 export default function ResultsPage() {
+  // Takes the keyword after "?" in the URL"
   const [searchParams, setSearchParams] = useSearchParams();
   const keyword = searchParams.get("keyword") || "";
 
-  // 对讲机，告诉App.tsx想去哪一个新房间
-  const navigate = useNavigate(); // 用于实现返回功能
+  // Event emitter: notify App.tsx which new room (page) to join.
+  const navigate = useNavigate(); // For navigation
 
-  // 数据过滤：忽略大小写
+  // Data filtering - need to be replace when the backend is completed
   const allRecipes = mockRecipes as Recipe[];
 
   const filteredResults = allRecipes.filter((recipe) => {
@@ -33,15 +34,15 @@ export default function ResultsPage() {
     return recipe.title.toLowerCase().includes(keyword.toLowerCase());
   });
 
-  // 搜索栏搜索数据
+  // Search box, takes the information inputted by the user
   const [inputValue, setInputValue] = useState(keyword);
 
-  // 监听 URL 变化同步搜索框
+  // Sync search state with URL query parameters
   useEffect(() => {
     setInputValue(keyword);
   }, [keyword]);
 
-  // 边打字边搜（实时更新 URL）
+  // Realtime update URL while typing
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     setInputValue(newValue);
@@ -52,35 +53,35 @@ export default function ResultsPage() {
     }
   };
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
   };
 
   return (
     <div className="min-h-screen py-10">
       <div className="container mx-auto max-w-6xl px-4 md:px-6">
-        {/* ================= 搜索框区域 ================= */}
+        {/* ================= Search box ================= */}
         <div className="mb-14 flex w-full justify-center">
           <div className="flex w-full items-center gap-3 md:gap-4">
-            {/* 返回按钮 */}
+            {/* Back button */}
             <Button
               variant="back"
-              onClick={() => navigate("/")} // 点击返回主页
+              onClick={() => navigate("/")} // Back to main
               className="h-14 py-4 md:h-16"
             >
               <ChevronLeft className="mr-1 h-4 w-4 md:h-5 md:w-5" />
               Back
             </Button>
 
-            {/* 搜索表单 */}
+            {/* Search form */}
             <form
               onSubmit={handleSearch}
               className="group relative flex h-14 w-full items-center"
             >
-              {/* 搜索图标 */}
+              {/* Search icon */}
               <Search className="group-focus-within: primary pointer-events-none absolute left-5 z-10 h-14 w-6 text-gray-400 transition-colors" />
 
-              {/* 输入框 */}
+              {/* Input box */}
               <Input
                 type="search"
                 placeholder="Search for pasta, vegan, keto..."
@@ -92,7 +93,7 @@ export default function ResultsPage() {
           </div>
         </div>
 
-        {/* ================= 页面标题 ================= */}
+        {/* ================= Page title ================= */}
         <div className="mb-8 flex items-end justify-between border-b pb-4">
           <h1 className="min-w-0 flex-1 truncate px-3 text-3xl tracking-tight text-gray-800">
             {keyword ? (
@@ -109,15 +110,18 @@ export default function ResultsPage() {
           </span>
         </div>
 
-        {/* ================= 搜索结果 ================= */}
+        {/* ================= Results list ================= */}
         {filteredResults.length > 0 ? (
           <div className="grid grid-cols-1 gap-8 px-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredResults.map((recipe) => (
               <Card
                 key={recipe.id}
+
+                onClick={() => navigate(`/recipe/${recipe.id}`)}
+
                 className="group flex h-full cursor-pointer flex-col overflow-hidden rounded-3xl border-transparent bg-white shadow-[0_4px_20px_rgb(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_8px_30px_rgb(249,115,22,0.12)]"
               >
-                {/* 图片容器（悬浮放大） */}
+                {/* Image container */}
                 <div className="relative h-52 overflow-hidden">
                   {recipe.cover_image_urls.length > 0 && (
                     <img
@@ -143,7 +147,7 @@ export default function ResultsPage() {
                       "A delicious recipe you must try today. Click to explore the cooking steps!"}
                   </p>
 
-                  {/* 底部数据统计（浏览/收藏等）加个顶部分割线 */}
+                  {/* Cutting line */}
                   <div className="mt-auto flex items-center border-t border-gray-100 pt-4 text-xs font-semibold text-gray-400">
                     <span className="truncate">{recipe.stats_text}</span>
                   </div>
@@ -152,7 +156,7 @@ export default function ResultsPage() {
             ))}
           </div>
         ) : (
-          /* ================= 无结果时的空状态优化 ================= */
+          /* ================= Null status ================= */
           <div className="mt-8 rounded-3xl border border-gray-50 bg-white py-24 text-center shadow-[0_4px_20px_rgb(0,0,0,0.02)]">
             <div className="mb-4 text-4xl">🔍</div>
             <h3 className="mb-2 text-xl font-bold text-gray-800">

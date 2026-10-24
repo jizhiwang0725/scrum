@@ -1,7 +1,7 @@
-// 路由
+// Router
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 
-// 网页
+// Pages
 import Home from "@/pages/Home";
 import ResultsPage from "@/pages/ResultsPage";
 import NotFound from "@/pages/NotFound";
@@ -64,18 +64,18 @@ const loadTestRecipes: RecipeListLoader = (signal) =>
     signal.addEventListener("abort", abort, { once: true });
   });
 
-// 路由
+// Router
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* 主页 */}
+        {/* Main */}
         <Route path="/" element={<Home />} />
 
-        {/* 搜索页 */}
+        {/* Results page */}
         <Route path="/results" element={<ResultsPage />} />
 
-        {/* 详细页面 */}
+        {/* Detail page */}
         <Route path="/recipe/:id" element={<RecipeDetail />} />
 
         {import.meta.env.DEV && (
@@ -85,7 +85,7 @@ export default function App() {
           />
         )}
 
-        {/* 错误页面 */}
+        {/* Not found */}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
