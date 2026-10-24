@@ -1,22 +1,15 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import mockRecipes from "@/data/recipes.json";
+
+// Import recipe interface
+import type { Recipe } from "@/types/recipe";
 
 // Components
 import { Search, ChevronLeft } from "lucide-react"; // Arrow sign for "back" button
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-
-// Fake data structure
-export type Recipe = {
-  id: string;
-  title: string;
-  author: string;
-  cover_image_urls: string[];
-  stats_text: string;
-  description: string;
-};
+import { Loading } from "@/components/common/Loading";
 
 export default function ResultsPage() {
   // Takes the keyword after "?" in the URL"
@@ -26,35 +19,71 @@ export default function ResultsPage() {
   // Event emitter: notify App.tsx which new room (page) to join.
   const navigate = useNavigate(); // For navigation
 
-  // Data filtering - need to be replace when the backend is completed
-  const allRecipes = mockRecipes as Recipe[];
+  // Recipes retrieved from backend
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
 
-  const filteredResults = allRecipes.filter((recipe) => {
-    if (!keyword) return true;
-    return recipe.title.toLowerCase().includes(keyword.toLowerCase());
-  });
+  // Loading status
+  const [isLoading, setIsLoading] = useState(false);
 
   // Search box, takes the information inputted by the user
   const [inputValue, setInputValue] = useState(keyword);
 
-  // Sync search state with URL query parameters
   useEffect(() => {
+    const fetchRecipes = async () => {
+      setIsLoading(true);
+
+      try {
+        const baseUrl = (
+          import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000"
+        ).replace(/\/$/, "");
+
+        const url = new URL(`${baseUrl}/api/recipes`);
+        if (keyword) {
+          url.searchParams.append("q", keyword);
+        }
+
+        const response = await fetch(url.toString(), {
+          headers: { Accept: "application/json" },
+        });
+
+        if (!response.ok) throw new Error("Recipes failed to retrieve");
+
+        const data = await response.json();
+
+        setRecipes(data.items || []);
+      } catch (error) {
+        console.error(error);
+        setRecipes([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchRecipes();
     setInputValue(keyword);
   }, [keyword]);
+
+  //
+  const handleSearch = (e: React.SubmitEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (inputValue.trim()) {
+      setSearchParams({ keyword: inputValue.trim() });
+    } else {
+      setSearchParams({});
+    }
+  };
 
   // Realtime update URL while typing
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
+
     setInputValue(newValue);
     if (newValue.trim()) {
       setSearchParams({ keyword: newValue.trim() });
     } else {
       setSearchParams({});
     }
-  };
-
-  const handleSearch = (e: React.SubmitEvent<HTMLFormElement>) => {
-    e.preventDefault();
   };
 
   return (
@@ -95,7 +124,7 @@ export default function ResultsPage() {
 
         {/* ================= Page title ================= */}
         <div className="mb-8 flex items-end justify-between border-b pb-4">
-          <h1 className="min-w-0 flex-1 truncate px-3 text-3xl tracking-tight text-gray-800">
+          <h1 className="min-w-0 flex-1 truncate text-3xl tracking-tight text-gray-800">
             {keyword ? (
               <>
                 Search results for:{" "}
@@ -106,14 +135,19 @@ export default function ResultsPage() {
             )}
           </h1>
           <span className="rounded-full border bg-white px-3 py-1 text-sm font-medium text-gray-500 shadow-sm">
-            {filteredResults.length} recipe(s)
+            {recipes.length} recipe(s)
           </span>
         </div>
 
         {/* ================= Results list ================= */}
-        {filteredResults.length > 0 ? (
-          <div className="grid grid-cols-1 gap-8 px-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredResults.map((recipe) => (
+        {isLoading ? (
+          <Loading
+            message="Finding recipes ..."
+            className="mt-12 min-h-[40vh]"
+          />
+        ) : recipes.length > 0 ? (
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {recipes.map((recipe) => (
               <Card
                 key={recipe.id}
 
@@ -127,6 +161,8 @@ export default function ResultsPage() {
                     <img
                       src={recipe.cover_image_urls[0]}
                       alt={recipe.title}
+                      referrerPolicy="no-referrer" /* Fix anti-hotlinking */
+
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   )}
@@ -146,11 +182,6 @@ export default function ResultsPage() {
                     {recipe.description ||
                       "A delicious recipe you must try today. Click to explore the cooking steps!"}
                   </p>
-
-                  {/* Cutting line */}
-                  <div className="mt-auto flex items-center border-t border-gray-100 pt-4 text-xs font-semibold text-gray-400">
-                    <span className="truncate">{recipe.stats_text}</span>
-                  </div>
                 </CardContent>
               </Card>
             ))}
