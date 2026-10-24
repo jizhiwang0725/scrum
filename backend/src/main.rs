@@ -1,22 +1,40 @@
-use axum::{routing::get, Json, Router};
-use serde::Serialize;
-
-#[derive(Serialize)]
-struct HealthResponse{
-    status: &'static str,
-}
-
-async fn health() -> Json<HealthResponse>{
-    Json(HealthResponse { status: "ok"}) //Return Json Response
-}
+mod app;
+mod config;
+mod data;
+mod error;
+mod http;
+mod models;
+mod query;
+mod recipes;
+mod search;
+mod state;
+use crate::state::AppState;
+use std::sync::Arc;
+use tracing_subscriber::EnvFilter;
 
 #[tokio::main]
-async fn main() -> std::io::Result<()>{
-    let app = Router::new().route("/api/health", get(health));
+async fn main() -> std::io::Result<()> {
+    // Show logs in the terminal.
+    tracing_subscriber::fmt()
+        .with_env_filter(
+            EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info")),
+        )
+        .init();
 
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:3000").await?;
-        //listen to 3000 port
+    let recipes = data::load_recipes().expect("Failed to load recipes");
 
-    println!("Server: http://127.0.0.1:3000");
-    axum::serve(listener, app).await //Receive Request
+    let state = Arc::new(AppState { recipes });
+
+    let app = app::build_app(state);
+
+    // Add CORS and request logs to the existing routes.
+    let app = http::with_middleware(app, config::frontend_origins()?);
+
+    let bind_addr = std::env::var("BIND_ADDR").unwrap_or_else(|_| "127.0.0.1:3000".to_string());
+
+    // Listen only on the local maching during development
+    let listener = tokio::net::TcpListener::bind(bind_addr.as_str()).await?;
+
+    println!("Server: http://{bind_addr}");
+    axum::serve(listener, app).await
 }

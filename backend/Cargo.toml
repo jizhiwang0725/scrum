@@ -3,7 +3,22 @@ name = "backend"
 version = "0.1.0"
 edition = "2024"
 
+[dev-dependencies]
+serde_json = "1"
+tower = { version = "0.5", features = ["util"] }
+
 [dependencies]
+unicode-normalization = "0.1"
 axum = "0.8"
 serde = { version = "1", features = ["derive"] }
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "net"] }
+serde_json = "1"
+# Configure CORS so the frontend can read backend responses; log request status codes and response times.
+tower-http = { version = "0.6", features = ["cors", "trace"] }
+
+#  Emit logs from the code.
+tracing = "0.1"
+
+#  Collect logs, display them in the terminal, and control which log levels are shown.
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+strsim = "0.11.1"

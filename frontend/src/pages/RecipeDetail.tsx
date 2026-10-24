@@ -13,6 +13,7 @@ import { Loading } from "@/components/common/Loading";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+// Define the recipe data required by the detail page.
 export interface Recipe {
   id: string;
   title: string;
@@ -26,13 +27,17 @@ export interface Recipe {
   url: string;
 }
 
+// Allow callers to provide a custom loader that supports request cancellation.
+// The response remains unknown until it passes runtime validation.
 export type RecipeListLoader = (signal: AbortSignal) => Promise<unknown>;
 
+// Use a discriminated union to represent each possible request state.
 type RequestState =
   | { status: "loading" }
   | { status: "success"; recipe: Recipe }
   | { status: "error"; title: string; message: string };
 
+// Validate recipe fields at runtime before using external data in the UI.
 function isRecipe(value: unknown): value is Recipe {
   if (typeof value !== "object" || value === null) return false;
   const recipe = value as Record<string, unknown>;
@@ -46,6 +51,7 @@ function isRecipe(value: unknown): value is Recipe {
     "url",
   ];
 
+  // Check required strings, image URL arrays, ingredients, and numbered steps.
   return (
     strings.every((field) => typeof recipe[field] === "string") &&
     Array.isArray(recipe.cover_image_urls) &&
@@ -72,12 +78,15 @@ function isRecipe(value: unknown): value is Recipe {
   );
 }
 
+// Fetch the recipe list using the configured API endpoint.
 const loadApiRecipes: RecipeListLoader = async (signal) => {
+  // Remove a trailing slash before appending the API path.
   const baseUrl = (
     import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000"
   ).replace(/\/$/, "");
   let response: Response;
   let data: unknown;
+
   try {
     response = await fetch(`${baseUrl}/api/recipes`, {
       signal,
@@ -85,10 +94,12 @@ const loadApiRecipes: RecipeListLoader = async (signal) => {
     });
     data = await response.json();
   } catch {
+    // Report network failures and invalid JSON with a shared error message.
     throw new Error("请求失败，请重试。");
   }
 
   if (!response.ok) {
+    // Use the API's error message when it matches the expected structure.
     if (
       typeof data === "object" &&
       data !== null &&
@@ -106,8 +117,11 @@ const loadApiRecipes: RecipeListLoader = async (signal) => {
   return data;
 };
 
+// Accept only absolute HTTP or HTTPS URLs for links and images.
+// Return undefined for missing values, invalid URLs, or unsupported protocols.
 function httpUrl(value: string | undefined) {
   if (!value) return undefined;
+
   try {
     const url = new URL(value);
     return ["https:", "http:"].includes(url.protocol) ? url.href : undefined;
@@ -116,6 +130,8 @@ function httpUrl(value: string | undefined) {
   }
 }
 
+// Render a recipe image with a fallback for missing or failed images.
+// Cover images load eagerly; step images use lazy loading.
 function RecipeImage({
   src,
   alt,
@@ -145,6 +161,7 @@ function RecipeImage({
           className={cn("w-full", cover ? "h-full object-cover" : "h-auto")}
         />
       ) : (
+        // Preserve an accessible image description when showing the fallback.
         <div
           role="img"
           aria-label={alt}
@@ -160,15 +177,19 @@ function RecipeImage({
   );
 }
 
+// Display the details of a successfully loaded recipe.
 function RecipeContent({ recipe }: { recipe: Recipe }) {
   const authorUrl = httpUrl(recipe.author_url);
   const sourceUrl = httpUrl(recipe.url);
+
+  // Sort a copy of the steps so the original recipe data is not mutated.
   const steps = [...recipe.steps].sort((a, b) => a.number - b.number);
   const linkClassName =
     "inline-flex items-center gap-2 rounded-md text-sm text-muted-foreground underline-offset-4 outline-none hover:text-primary hover:underline focus-visible:ring-3 focus-visible:ring-ring/50";
 
   return (
     <article className="space-y-12 md:space-y-16">
+      {/* Show the cover image, title, author, description, and recipe summary. */}
       <header className="grid items-center gap-8 lg:grid-cols-2 lg:gap-12">
         <RecipeImage
           src={recipe.cover_image_urls[0]}
@@ -180,6 +201,8 @@ function RecipeContent({ recipe }: { recipe: Recipe }) {
           <h1 className="font-heading text-4xl leading-tight font-semibold break-words md:text-5xl">
             {recipe.title}
           </h1>
+
+          {/* Link to the author only when a valid HTTP or HTTPS URL is available. */}
           {recipe.author && (
             <p className="text-muted-foreground text-sm">
               原作者：{" "}
@@ -206,6 +229,14 @@ function RecipeContent({ recipe }: { recipe: Recipe }) {
               {recipe.description}
             </p>
           )}
+
+          {/* Hide empty descriptions while preserving line breaks in visible text. */}
+          {recipe.description.trim() && (
+            <p className="text-muted-foreground text-base leading-8 break-words whitespace-pre-wrap">
+              {recipe.description}
+            </p>
+          )}
+
           <div className="border-border text-muted-foreground flex flex-wrap gap-5 border-y py-5 text-sm">
             <span className="inline-flex items-center gap-2">
               <UtensilsCrossed
@@ -219,6 +250,8 @@ function RecipeContent({ recipe }: { recipe: Recipe }) {
               {steps.length} 个步骤
             </span>
           </div>
+
+          {/* Provide navigation to the cooking steps and the original recipe. */}
           <div className="flex flex-wrap items-center gap-5">
             <Button
               nativeButton={false}
@@ -243,6 +276,7 @@ function RecipeContent({ recipe }: { recipe: Recipe }) {
       </header>
 
       <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-14">
+        {/* Keep the ingredient list sticky on large screens. */}
         <section
           aria-labelledby="recipe-ingredients"
           className="border-border bg-card text-card-foreground min-w-0 rounded-2xl border p-6 lg:sticky lg:top-8"
@@ -261,6 +295,7 @@ function RecipeContent({ recipe }: { recipe: Recipe }) {
                   className="grid grid-cols-2 gap-4 py-4 text-base leading-7"
                 >
                   <dt className="font-medium break-words">{ingredient.name}</dt>
+                  {/* Display a fallback when an ingredient amount is blank. */}
                   <dd className="text-muted-foreground text-right break-words whitespace-pre-wrap">
                     {ingredient.amount.trim()
                       ? ingredient.amount
@@ -277,6 +312,7 @@ function RecipeContent({ recipe }: { recipe: Recipe }) {
         </section>
 
         <div className="min-w-0 space-y-12">
+          {/* Render cooking steps in ascending numerical order. */}
           <section aria-labelledby="recipe-steps" className="space-y-8">
             <h2
               id="recipe-steps"
@@ -307,6 +343,8 @@ function RecipeContent({ recipe }: { recipe: Recipe }) {
                         {step.text}
                       </p>
                     )}
+
+                    {/* Each step may include multiple supporting images. */}
                     {step.image_urls.length > 0 && (
                       <div className="space-y-4">
                         {step.image_urls.map((url, imageIndex) => (
@@ -328,6 +366,7 @@ function RecipeContent({ recipe }: { recipe: Recipe }) {
             )}
           </section>
 
+          {/* Show the tips section only when it contains non-whitespace text. */}
           {recipe.tips.trim() && (
             <section
               aria-labelledby="recipe-tips"
@@ -350,6 +389,7 @@ function RecipeContent({ recipe }: { recipe: Recipe }) {
   );
 }
 
+// Load the recipe list, locate the requested recipe, and manage request feedback.
 function RecipeRequest({
   id,
   loadRecipes,
@@ -363,6 +403,8 @@ function RecipeRequest({
 
   useEffect(() => {
     const controller = new AbortController();
+
+    // Abort requests that exceed 15 seconds and display a timeout message.
     const timeout = window.setTimeout(() => {
       controller.abort();
       setState({
@@ -371,12 +413,18 @@ function RecipeRequest({
         message: "请求失败，请重试。",
       });
     }, 15000);
+
+    // Start at the top of the page when loading a recipe.
     window.scrollTo({ top: 0 });
 
     async function load() {
       try {
         const data = await loadRecipes(controller.signal);
+
+        // Ignore results if the request was cancelled or timed out.
         if (controller.signal.aborted) return;
+
+        // Require a valid recipe array and a total matching its length.
         if (
           typeof data !== "object" ||
           data === null ||
@@ -388,7 +436,10 @@ function RecipeRequest({
         ) {
           throw new Error("请求失败，请重试。");
         }
+
+        // Find the recipe whose ID matches the route parameter.
         const recipe = data.items.find((item: Recipe) => item.id === id);
+
         setState(
           recipe
             ? { status: "success", recipe }
@@ -399,6 +450,7 @@ function RecipeRequest({
               },
         );
       } catch (error) {
+        // Avoid overwriting timeout feedback or updating state after cancellation.
         if (!controller.signal.aborted) {
           setState({
             status: "error",
@@ -408,17 +460,21 @@ function RecipeRequest({
           });
         }
       } finally {
+        // Clear the timer once the loading operation settles.
         window.clearTimeout(timeout);
       }
     }
 
     void load();
+
+    // Cancel pending work when the component unmounts or dependencies change.
     return () => {
       controller.abort();
       window.clearTimeout(timeout);
     };
   }, [id, loadRecipes]);
 
+  // Render the appropriate UI for the current request state.
   if (state.status === "loading")
     return <Loading message="正在加载菜谱…" className="min-h-96" />;
   if (state.status === "error")
@@ -434,16 +490,21 @@ function RecipeRequest({
   return <RecipeContent recipe={state.recipe} />;
 }
 
+// Build the detail page using the API loader unless a custom loader is provided.
 export default function RecipeDetail({
   loadRecipes = loadApiRecipes,
 }: {
   loadRecipes?: RecipeListLoader;
 }) {
+  // Read the recipe ID from the current route.
   const { id = "" } = useParams();
+
+  // Incrementing this counter remounts the request component for a fresh attempt.
   const [attempt, setAttempt] = useState(0);
 
   return (
     <div className="bg-background text-foreground min-h-svh font-sans">
+      {/* Display the site branding with a link to the home page. */}
       <header className="border-border border-b">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-5 md:px-10">
           <Link
@@ -458,6 +519,7 @@ export default function RecipeDetail({
           </Link>
         </div>
       </header>
+
       <main className="mx-auto max-w-6xl px-6 pt-6 pb-16 md:px-10 md:pb-24">
         <Link
           to="/"
@@ -466,6 +528,8 @@ export default function RecipeDetail({
           <ArrowLeft aria-hidden="true" className="size-4" />
           返回首页
         </Link>
+
+        {/* Reset request state whenever the recipe ID or retry attempt changes. */}
         <RecipeRequest
           key={`${id}-${attempt}`}
           id={id}

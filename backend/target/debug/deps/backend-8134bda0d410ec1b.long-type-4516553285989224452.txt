@@ -1,2 +1,0 @@
-fn() -> impl Future<Output = Json<HealthResponse>> {health}
-fn() -> impl Future<Output = Json<HealthResponse>> {health}: Handler<_, _>
