@@ -1,31 +1,21 @@
 import { useEffect, useState } from "react";
 import {
   ArrowLeft,
-  ChefHat,
   ExternalLink,
   ImageOff,
   ListOrdered,
   UtensilsCrossed,
 } from "lucide-react";
-import { Link, useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
+
+// Recipe interface
+import type { Recipe } from "@/types/recipe";
+
+// Components
 import { ErrorState } from "@/components/common/ErrorState";
 import { Loading } from "@/components/common/Loading";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-
-// Define the recipe data required by the detail page.
-export interface Recipe {
-  id: string;
-  title: string;
-  description: string;
-  ingredients: { name: string; amount: string }[];
-  steps: { number: number; text: string; image_urls: string[] }[];
-  tips: string;
-  cover_image_urls: string[];
-  author: string;
-  author_url: string;
-  url: string;
-}
 
 // Allow callers to provide a custom loader that supports request cancellation.
 // The response remains unknown until it passes runtime validation.
@@ -197,7 +187,6 @@ function RecipeContent({ recipe }: { recipe: Recipe }) {
           cover
         />
         <div className="min-w-0 space-y-6">
-          <p className="text-primary text-sm font-medium">用心做一道好菜</p>
           <h1 className="font-heading text-4xl leading-tight font-semibold break-words md:text-5xl">
             {recipe.title}
           </h1>
@@ -499,35 +488,23 @@ export default function RecipeDetail({
   // Read the recipe ID from the current route.
   const { id = "" } = useParams();
 
+  // Navigation
+  const navigate = useNavigate();
+
   // Incrementing this counter remounts the request component for a fresh attempt.
   const [attempt, setAttempt] = useState(0);
 
   return (
     <div className="bg-background text-foreground min-h-svh font-sans">
       {/* Display the site branding with a link to the home page. */}
-      <header className="border-border border-b">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-5 md:px-10">
-          <Link
-            to="/"
-            className="font-heading focus-visible:ring-ring/50 inline-flex items-center gap-2 rounded-md text-2xl font-semibold outline-none focus-visible:ring-3"
-          >
-            <ChefHat
-              aria-hidden="true"
-              className="text-primary size-7 shrink-0"
-            />
-            Recipe Finder
-          </Link>
-        </div>
-      </header>
-
       <main className="mx-auto max-w-6xl px-6 pt-6 pb-16 md:px-10 md:pb-24">
-        <Link
-          to="/"
+        <button
+          onClick={() => navigate(-1)}
           className="text-muted-foreground hover:text-primary focus-visible:ring-ring/50 mb-8 inline-flex items-center gap-2 rounded-md text-sm outline-none focus-visible:ring-3"
         >
           <ArrowLeft aria-hidden="true" className="size-4" />
-          返回首页
-        </Link>
+          返回上一页
+        </button>
 
         {/* Reset request state whenever the recipe ID or retry attempt changes. */}
         <RecipeRequest
