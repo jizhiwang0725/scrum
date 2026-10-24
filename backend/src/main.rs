@@ -6,8 +6,8 @@ mod http;
 mod models;
 mod query;
 mod recipes;
+mod search;
 mod state;
-
 use crate::state::AppState;
 use std::sync::Arc;
 use tracing_subscriber::EnvFilter;
